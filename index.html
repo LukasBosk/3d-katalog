@@ -20,12 +20,32 @@
             background-color: #ffffff;
             border-bottom: 1px solid #e0e0e0;
             padding: 20px 40px;
-            text-align: center;
         }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .header-logo {
+            height: 60px;
+            width: auto;
+            object-fit: contain;
+        }
+
+        .header-text {
+            text-align: left;
+        }
+
         header h1 {
             margin: 0;
             font-size: 28px;
             letter-spacing: 1px;
+            line-height: 1.2;
         }
         header p {
             margin: 5px 0 0 0;
@@ -48,7 +68,7 @@
             border: 1px solid #eaeaea;
             overflow: hidden;
             box-shadow: 0 4px 6px rgba(0,0,0,0.02);
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
             text-decoration: none;
             color: inherit;
             display: flex;
@@ -56,8 +76,8 @@
         }
 
         .catalog-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+            transform: scale(1.03);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.12);
         }
 
         .card-viewer-container {
@@ -105,8 +125,13 @@
 <body>
 
     <header>
-        <h1>DIGITÁLNÍ SBÍRKY</h1>
-        <p>3d katalog sbírkových předmětů</p>
+        <div class="header-container">
+            <img src="logo.png" alt="Logo" class="header-logo">
+            <div class="header-text">
+                <h1>DIGITÁLNÍ SBÍRKY</h1>
+                <p>3d katalog sbírkových předmětů</p>
+            </div>
+        </div>
     </header>
 
     <main class="catalog-grid">
@@ -132,7 +157,7 @@
         <a href="A56265.html" class="catalog-card">
             <div class="card-viewer-container">
                 <model-viewer 
-                    src="https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb" 
+                    src="A56265.glb" 
                     poster="1.jpg"
                     loading="lazy"
                     reveal="interaction"
