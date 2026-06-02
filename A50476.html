@@ -16,46 +16,30 @@
         
         /* Levá strana: Média */
         .media-section { flex: 1 1 500px; display: flex; flex-direction: column; gap: 15px; }
-        .model-box { background: #e9e9e9; height: 450px; border-radius: 6px; overflow: hidden; }
+        
+        /* Společný box pro 3D model i Foto */
+        .model-box, .photo-wrapper { background: #e9e9e9; height: 450px; border-radius: 6px; overflow: hidden; position: relative; }
         model-viewer { width: 100%; height: 100%; }
         
+        /* NOVÉ: Kontajner pro fotku s podporou plynulého zoomu */
+        .photo-wrapper { display: none; cursor: grab; user-select: none; background: #f0f0f0; }
+        .photo-wrapper:active { cursor: grabbing; }
+        
+        .main-photo-view { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: contain; 
+            transform-origin: 0 0; /* Důležité pro správný výpočet pozice zoomu */
+            transition: transform 0.1s ease-out;
+            pointer-events: none; /* Ignoruje přímé akce na obrázek, aby fungovalo tahání boxu */
+        }
+        
+        .zoom-hint { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; pointer-events: none; z-index: 10; }
+
         /* Galerie náhledů */
         .gallery { display: flex; gap: 10px; }
         .gallery-thumb { width: 80px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: border 0.2s; }
         .gallery-thumb:hover { border-color: #999; }
-
-        /* Hlavní zobrazení fotky */
-        .photo-wrapper { display: none; width: 100%; height: 450px; background: #000; border-radius: 6px; overflow: hidden; position: relative; cursor: zoom-in; }
-        .main-photo-view { width: 100%; height: 100%; object-fit: contain; }
-        .zoom-hint { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; pointer-events: none; }
-
-        /* NOVÉ: Vyskakovací okno na celou obrazovku pro opravdový MAXI ZOOM */
-        .lightbox-overlay {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9);
-            z-index: 9999;
-            cursor: zoom-out;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-        .lightbox-overlay img {
-            max-width: 95%;
-            max-height: 95%;
-            object-fit: contain;
-            transition: transform 0.1s ease-out;
-            transform-origin: center center;
-        }
-        .close-btn {
-            position: absolute;
-            top: 20px; right: 20px;
-            color: white; font-size: 30px; font-weight: bold;
-            cursor: pointer; background: rgba(0,0,0,0.5);
-            width: 45px; height: 45px; display: flex;
-            align-items: center; justify-content: center; border-radius: 50%;
-        }
 
         /* Pravá strana: Informace */
         .info-section { flex: 1 1 400px; }
@@ -86,9 +70,9 @@
                 </model-viewer>
             </div>
 
-            <div id="photoWrapper" class="photo-wrapper" onclick="openLightbox()">
+            <div id="photoWrapper" class="photo-wrapper">
                 <img src="" id="mainPhoto" class="main-photo-view" alt="Detailní foto">
-                <div class="zoom-hint">🔍 Klikněte pro přiblížení</div>
+                <div class="zoom-hint">📜 Použijte kolečko myši pro zoom a tažení pro posun</div>
             </div>
 
             <div class="gallery">
@@ -110,11 +94,6 @@
 
     </div>
 
-    <div id="lightbox" class="lightbox-overlay" onclick="closeLightbox()">
-        <span class="close-btn">&times;</span>
-        <img id="lightboxImg" src="" alt="Zvětšený detail" onmousemove="zoomImage(event)" onmouseleave="resetZoom()">
-    </div>
-
     <script>
         // 1. OTOČENÍ MODELU: Hned po načtení ho skript otočí
         const model = document.getElementById('atašeModel');
@@ -126,13 +105,12 @@
         const modelBox = document.getElementById('modelBox');
         const photoWrapper = document.getElementById('photoWrapper');
         const mainPhoto = document.getElementById('mainPhoto');
-        const lightbox = document.getElementById('lightbox');
-        const lightboxImg = document.getElementById('lightboxImg');
 
         function changeMedia(photoUrl) {
             modelBox.style.display = 'none';
             photoWrapper.style.display = 'block'; 
             mainPhoto.src = photoUrl;
+            resetZoom(); // Resetuje zoom při změně fotky
         }
 
         function show3D() {
@@ -140,36 +118,79 @@
             modelBox.style.display = 'block';
         }
 
-        // 3. NOVÝ LOKÁLNÍ ZOOM (Funguje i bez serveru)
-        function openLightbox() {
-            if(!mainPhoto.src) return;
-            lightboxImg.src = mainPhoto.src;
-            lightbox.style.display = 'flex';
+        // 3. SKRIPT PRO ZOOM KOLEČKEM MYŠI A TAHÁNÍ (Přímo v rámečku)
+        let scale = 1;
+        let pointX = 0;
+        let pointY = 0;
+        let startX = 0;
+        let startY = 0;
+        let isPanning = false;
+
+        function setTransform() {
+            mainPhoto.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
         }
 
-        function closeLightbox() {
-            lightbox.style.display = 'none';
-            resetZoom();
-        }
+        // Zoomování kolečkem myši
+        photoWrapper.addEventListener('wheel', function(e) {
+            e.preventDefault(); // Zabrání scrollování celé stránky při zoomu fotky
+            
+            const xs = (e.offsetX - pointX) / scale;
+            const ys = (e.offsetY - pointY) / scale;
+            const delta = -e.deltaY;
 
-        // Efekt lupy: Obrázek se zvětší a posouvá se podle pohybu myši
-        function zoomImage(event) {
-            const img = lightboxImg;
-            img.style.transform = "scale(2.5)"; // Tímto číslem určíte sílu zvětšení (2.5x)
+            if (delta > 0) {
+                scale *= 1.2;
+            } else {
+                scale /= 1.2;
+            }
             
-            // Výpočet pozice myši vůči obrázku
-            const rect = event.currentTarget.getBoundingClientRect();
-            const x = event.clientX - rect.left;
-            const y = event.clientY - rect.top;
+            // Omezení minimálního a maximálního přiblížení (1x až 6x)
+            scale = Math.min(Math.max(1, scale), 6);
+
+            if (scale === 1) {
+                pointX = 0;
+                pointY = 0;
+            } else {
+                pointX = e.offsetX - xs * scale;
+                pointY = e.offsetY - ys * scale;
+            }
+
+            setTransform();
+        });
+
+        // Začátek tažení myší (Pan)
+        photoWrapper.addEventListener('mousedown', function(e) {
+            if (scale === 1) return; // Pokud není přiblíženo, netaháme
+            e.preventDefault();
+            startX = e.offsetX - pointX;
+            startY = e.offsetY - pointY;
+            isPanning = true;
+        });
+
+        // Pohyb při tažení myší
+        window.addEventListener('mousemove', function(e) {
+            if (!isPanning) return;
             
-            const xPercent = (x / rect.width) * 100;
-            const yPercent = (y / rect.height) * 100;
+            // Musíme spočítat pozici vůči rámečku
+            const rect = photoWrapper.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
             
-            img.style.transformOrigin = `${xPercent}% ${yPercent}%`;
-        }
+            pointX = x - startX;
+            pointY = y - startY;
+            setTransform();
+        });
+
+        // Konec tažení myší
+        window.addEventListener('mouseup', function() {
+            isPanning = false;
+        });
 
         function resetZoom() {
-            lightboxImg.style.transform = "scale(1)";
+            scale = 1;
+            pointX = 0;
+            pointY = 0;
+            setTransform();
         }
     </script>
 
