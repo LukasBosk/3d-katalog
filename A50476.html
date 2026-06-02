@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Detail: Bronzová ataše</title>
+    
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.3/photoswipe.min.css">
     
     <style>
         body { font-family: 'Segoe UI', sans-serif; background-color: #f5f5f5; margin: 0; padding: 20px; color: #333; }
@@ -13,15 +16,22 @@
         
         .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        /* Levá strana: 3D model + Galerie pod ním */
+        /* Levá strana: Média */
         .media-section { flex: 1 1 500px; display: flex; flex-direction: column; gap: 15px; }
         .model-box { background: #e9e9e9; height: 450px; border-radius: 6px; overflow: hidden; }
         model-viewer { width: 100%; height: 100%; }
         
-        /* NOVÉ: Styl pro galerii fotek */
+        /* Galerie náhledů */
         .gallery { display: flex; gap: 10px; }
         .gallery-thumb { width: 80px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: border 0.2s; }
         .gallery-thumb:hover { border-color: #999; }
+
+        /* Hlavní zobrazení fotky s lupou */
+        .photo-wrapper { display: none; width: 100%; height: 450px; background: #000; border-radius: 6px; overflow: hidden; position: relative; cursor: zoom-in; }
+        .main-photo-view { width: 100%; height: 100%; object-fit: contain; }
+        
+        /* Malá nápověda pro uživatele */
+        .zoom-hint { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; pointer-events: none; }
 
         /* Pravá strana: Informace */
         .info-box { flex: 1 1 400px; }
@@ -29,9 +39,6 @@
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         td { padding: 12px 0; border-bottom: 1px solid #eee; }
         td.label { font-weight: bold; color: #666; width: 40%; }
-
-        /* NOVÉ: Hlavní zvětšená fotka (vyskakovací okno/skrytá plocha - vyřešíme jednoduše změnou zdroje) */
-        .main-photo-view { display: none; width: 100%; height: 450px; background: #000; border-radius: 6px; object-fit: contain; }
     </style>
 </head>
 <body>
@@ -42,7 +49,7 @@
         
         <div class="media-section">
             
-            <div class="model-box" id="modelBox"> 
+            <div class="model-box" id="modelBox">
                 <model-viewer 
                     src="A50476-web-glb.glb" 
                     alt="Bronzová ataše"
@@ -50,19 +57,22 @@
                     auto-rotate 
                     environment-image="neutral"
                     exposure="1.5"
-                    shadow-intensity="0">
-                    camera-orbit="180deg 75deg auto">
+                    shadow-intensity="0"
+                    rotation="0deg 180deg 0deg">
                 </model-viewer>
             </div>
 
-            <img src="" id="mainPhoto" class="main-photo-view" alt="Detailní foto" onclick="show3D()">
+            <div id="photoWrapper" class="photo-wrapper" onclick="openZoom()">
+                <img src="" id="mainPhoto" class="main-photo-view" alt="Detailní foto">
+                <div class="zoom-hint">🔍 Klikněte pro přiblížení</div>
+            </div>
 
             <div class="gallery">
                 <div class="gallery-thumb" onclick="show3D()" style="background: #ccc; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; text-transform: uppercase;">3D</div>
                 
                 <img src="A50476-jpeg.jpg" class="gallery-thumb" onclick="changeMedia('A50476-jpeg.jpg')" alt="Náhled 1">
             </div>
-            <p style="margin: 0; font-size: 12px; color: #888;">Kliknutím na "3D" nebo na zvětšenou fotku se vrátíte k interaktivnímu modelu.</p>
+            <p style="margin: 0; font-size: 12px; color: #888;">Kliknutím na "3D" se vrátíte k interaktivnímu modelu.</p>
         </div>
 
         <div class="info-section">
@@ -77,19 +87,44 @@
 
     </div>
 
+    <script type="module">
+        import PhotoSwipeLightbox from 'https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.3/photoswipe-lightbox.module.min.js';
+        
+        window.openZoom = function() {
+            const currentSrc = document.getElementById('mainPhoto').src;
+            
+            // Inicializace zoomovacího okna pro aktuální fotku
+            const options = {
+                dataSource: [
+                    {
+                        src: currentSrc,
+                        w: 1600, // Teoretická šířka velkého obrázku (knihovna si poradí, i když bude jiná)
+                        h: 1200  // Teoretická výška
+                    }
+                ],
+                pswpModule: () => import('https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.3/photoswipe.module.min.js')
+            };
+            
+            const pswp = new PhotoSwipeLightbox(options);
+            pswp.init();
+            pswp.loadAndOpen(0);
+        }
+    </script>
+
     <script>
         const modelBox = document.getElementById('modelBox');
+        const photoWrapper = document.getElementById('photoWrapper');
         const mainPhoto = document.getElementById('mainPhoto');
 
         function changeMedia(photoUrl) {
-            modelBox.style.display = 'none'; // Schová 3D model
-            mainPhoto.style.display = 'block'; // Ukáže velkou fotku
-            mainPhoto.src = photoUrl; // Nastaví správný obrázek
+            modelBox.style.display = 'none';
+            photoWrapper.style.display = 'block'; // Ukáže kontejner s fotkou
+            mainPhoto.src = photoUrl;
         }
 
         function show3D() {
-            mainPhoto.style.display = 'none'; // Schová fotku
-            modelBox.style.display = 'block'; // Ukáže 3D model
+            photoWrapper.style.display = 'none';
+            modelBox.style.display = 'block';
         }
     </script>
 
