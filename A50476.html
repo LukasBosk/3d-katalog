@@ -14,34 +14,29 @@
         
         .container { max-width: 1000px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
         
-        /* Levá strana: Média */
         .media-section { flex: 1 1 500px; display: flex; flex-direction: column; gap: 15px; }
         
-        /* Společný box pro 3D model i Foto */
         .model-box, .photo-wrapper { background: #e9e9e9; height: 450px; border-radius: 6px; overflow: hidden; position: relative; }
         model-viewer { width: 100%; height: 100%; }
         
-        /* NOVÉ: Kontajner pro fotku s podporou plynulého zoomu */
-        .photo-wrapper { display: none; cursor: grab; user-select: none; background: #f0f0f0; }
+        .photo-wrapper { cursor: grab; user-select: none; background: #f0f0f0; }
         .photo-wrapper:active { cursor: grabbing; }
         
         .main-photo-view { 
             width: 100%; 
             height: 100%; 
             object-fit: contain; 
-            transform-origin: 0 0; /* Důležité pro správný výpočet pozice zoomu */
+            transform-origin: 0 0; 
             transition: transform 0.1s ease-out;
-            pointer-events: none; /* Ignoruje přímé akce na obrázek, aby fungovalo tahání boxu */
+            pointer-events: none; 
         }
         
         .zoom-hint { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; pointer-events: none; z-index: 10; }
 
-        /* Galerie náhledů */
         .gallery { display: flex; gap: 10px; }
         .gallery-thumb { width: 80px; height: 60px; object-fit: cover; border-radius: 4px; cursor: pointer; border: 2px solid transparent; transition: border 0.2s; }
         .gallery-thumb:hover { border-color: #999; }
 
-        /* Pravá strana: Informace */
         .info-section { flex: 1 1 400px; }
         h1 { margin-top: 0; font-size: 26px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
@@ -57,7 +52,7 @@
         
         <div class="media-section">
             
-            <div class="model-box" id="modelBox">
+            <div class="model-box" id="modelBox" style="display: block;">
                 <model-viewer 
                     id="atašeModel"
                     src="A50476-web-glb.glb" 
@@ -70,7 +65,7 @@
                 </model-viewer>
             </div>
 
-            <div id="photoWrapper" class="photo-wrapper">
+            <div id="photoWrapper" class="photo-wrapper" style="display: none;">
                 <img src="" id="mainPhoto" class="main-photo-view" alt="Detailní foto">
                 <div class="zoom-hint">📜 Použijte kolečko myši pro zoom a tažení pro posun</div>
             </div>
@@ -95,13 +90,11 @@
     </div>
 
     <script>
-        // 1. OTOČENÍ MODELU: Hned po načtení ho skript otočí
         const model = document.getElementById('atašeModel');
         model.addEventListener('load', () => {
             model.orientation = "0deg 180deg 0deg";
         });
 
-        // 2. PŘEPÍNÁNÍ MEZI 3D A FOTKAMI
         const modelBox = document.getElementById('modelBox');
         const photoWrapper = document.getElementById('photoWrapper');
         const mainPhoto = document.getElementById('mainPhoto');
@@ -110,7 +103,7 @@
             modelBox.style.display = 'none';
             photoWrapper.style.display = 'block'; 
             mainPhoto.src = photoUrl;
-            resetZoom(); // Resetuje zoom při změně fotky
+            resetZoom();
         }
 
         function show3D() {
@@ -118,7 +111,6 @@
             modelBox.style.display = 'block';
         }
 
-        // 3. SKRIPT PRO ZOOM KOLEČKEM MYŠI A TAHÁNÍ (Přímo v rámečku)
         let scale = 1;
         let pointX = 0;
         let pointY = 0;
@@ -130,9 +122,8 @@
             mainPhoto.style.transform = `translate(${pointX}px, ${pointY}px) scale(${scale})`;
         }
 
-        // Zoomování kolečkem myši
         photoWrapper.addEventListener('wheel', function(e) {
-            e.preventDefault(); // Zabrání scrollování celé stránky při zoomu fotky
+            e.preventDefault(); 
             
             const xs = (e.offsetX - pointX) / scale;
             const ys = (e.offsetY - pointY) / scale;
@@ -144,7 +135,6 @@
                 scale /= 1.2;
             }
             
-            // Omezení minimálního a maximálního přiblížení (1x až 6x)
             scale = Math.min(Math.max(1, scale), 6);
 
             if (scale === 1) {
@@ -158,20 +148,17 @@
             setTransform();
         });
 
-        // Začátek tažení myší (Pan)
         photoWrapper.addEventListener('mousedown', function(e) {
-            if (scale === 1) return; // Pokud není přiblíženo, netaháme
+            if (scale === 1) return; 
             e.preventDefault();
             startX = e.offsetX - pointX;
             startY = e.offsetY - pointY;
             isPanning = true;
         });
 
-        // Pohyb při tažení myší
         window.addEventListener('mousemove', function(e) {
             if (!isPanning) return;
             
-            // Musíme spočítat pozici vůči rámečku
             const rect = photoWrapper.getBoundingClientRect();
             const x = e.clientX - rect.left;
             const y = e.clientY - rect.top;
@@ -181,7 +168,6 @@
             setTransform();
         });
 
-        // Konec tažení myší
         window.addEventListener('mouseup', function() {
             isPanning = false;
         });
