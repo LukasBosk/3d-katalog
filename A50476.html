@@ -30,11 +30,10 @@
         .photo-wrapper { display: none; width: 100%; height: 450px; background: #000; border-radius: 6px; overflow: hidden; position: relative; cursor: zoom-in; }
         .main-photo-view { width: 100%; height: 100%; object-fit: contain; }
         
-        /* Malá nápověda pro uživatele */
         .zoom-hint { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; padding: 4px 8px; font-size: 11px; border-radius: 4px; pointer-events: none; }
 
         /* Pravá strana: Informace */
-        .info-box { flex: 1 1 400px; }
+        .info-section { flex: 1 1 400px; }
         h1 { margin-top: 0; font-size: 26px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         td { padding: 12px 0; border-bottom: 1px solid #eee; }
@@ -51,14 +50,14 @@
             
             <div class="model-box" id="modelBox">
                 <model-viewer 
+                    id="atašeModel"
                     src="A50476-web-glb.glb" 
                     alt="Bronzová ataše"
                     camera-controls 
                     auto-rotate 
                     environment-image="neutral"
                     exposure="1.5"
-                    shadow-intensity="0"
-                    rotation="0deg 180deg 0deg">
+                    shadow-intensity="0">
                 </model-viewer>
             </div>
 
@@ -69,7 +68,6 @@
 
             <div class="gallery">
                 <div class="gallery-thumb" onclick="show3D()" style="background: #ccc; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: bold; text-transform: uppercase;">3D</div>
-                
                 <img src="A50476-jpeg.jpg" class="gallery-thumb" onclick="changeMedia('A50476-jpeg.jpg')" alt="Náhled 1">
             </div>
             <p style="margin: 0; font-size: 12px; color: #888;">Kliknutím na "3D" se vrátíte k interaktivnímu modelu.</p>
@@ -90,35 +88,47 @@
     <script type="module">
         import PhotoSwipeLightbox from 'https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.3/photoswipe-lightbox.module.min.js';
         
+        // 1. POJIŠTĚNÍ OTOČENÍ MODELU: Jakmile se model načte, skript ho natvrdo otočí o 180 stupňů
+        const model = document.getElementById('atašeModel');
+        model.addEventListener('load', () => {
+            model.orientation = "0deg 180deg 0deg";
+        });
+
+        // 2. FUNKCE PRO ZOOM FOTKY: Spustí se po kliknutí na zobrazenou fotku
         window.openZoom = function() {
             const currentSrc = document.getElementById('mainPhoto').src;
-            
-            // Inicializace zoomovacího okna pro aktuální fotku
-            const options = {
-                dataSource: [
-                    {
-                        src: currentSrc,
-                        w: 1600, // Teoretická šířka velkého obrázku (knihovna si poradí, i když bude jiná)
-                        h: 1200  // Teoretická výška
-                    }
-                ],
-                pswpModule: () => import('https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.3/photoswipe.module.min.js')
+            if(!currentSrc) return;
+
+            const img = new Image();
+            img.src = currentSrc;
+            img.onload = function() {
+                const options = {
+                    dataSource: [
+                        {
+                            src: currentSrc,
+                            w: img.naturalWidth || 1600,
+                            h: img.naturalHeight || 1200
+                        }
+                    ],
+                    pswpModule: () => import('https://cdnjs.cloudflare.com/ajax/libs/photoswipe/5.4.3/photoswipe.module.min.js')
+                };
+                
+                const pswp = new PhotoSwipeLightbox(options);
+                pswp.init();
+                pswp.loadAndOpen(0);
             };
-            
-            const pswp = new PhotoSwipeLightbox(options);
-            pswp.init();
-            pswp.loadAndOpen(0);
         }
     </script>
 
     <script>
+        // 3. PŘEPÍNÁNÍ MEZI 3D A FOTKAMI V GALERII
         const modelBox = document.getElementById('modelBox');
         const photoWrapper = document.getElementById('photoWrapper');
         const mainPhoto = document.getElementById('mainPhoto');
 
         function changeMedia(photoUrl) {
             modelBox.style.display = 'none';
-            photoWrapper.style.display = 'block'; // Ukáže kontejner s fotkou
+            photoWrapper.style.display = 'block'; 
             mainPhoto.src = photoUrl;
         }
 
