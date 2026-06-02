@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3d katalog předmětů</title>
+    
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: #f9f9f9;
+            margin: 0;
+            padding: 0;
+            color: #222;
+        }
+
+        header {
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            padding: 20px 40px;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+            letter-spacing: 1px;
+        }
+        header p {
+            margin: 5px 0 0 0;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Hlavní kontejner pro mřížku */
+        .catalog-grid {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 0 20px;
+            /* Vytvoření responzivní mřížky karet */
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        /* Styl jednotlivé karty předmětu */
+        .catalog-card {
+            background: #ffffff;
+            border-radius: 8px;
+            border: 1px solid #eaeaea;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+            text-decoration: none; /* Aby odkaz nevypadal jako podtržený text */
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Efekt při najetí myší na kartu */
+        .catalog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+        }
+
+        /* Prostor pro 3D náhled v kartě */
+        .card-viewer-container {
+            height: 250px;
+            background: #f0f0f0;
+            position: relative;
+        }
+
+        model-viewer {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Textové informace pod 3D modelem */
+        .card-info {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .card-info h2 {
+            margin: 0;
+            font-size: 18px;
+            color: #111;
+        }
+
+        .card-tag {
+            align-self: flex-start;
+            background: #e0e0e0;
+            color: #444;
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            font-weight: bold;
+        }
+
+        .card-meta {
+            font-size: 13px;
+            color: #777;
+            margin: 5px 0 0 0;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>DIGITÁLNÍ SBÍRKY</h1>
+        <p>3d katalog sbírkových předmětů</p>
+    </header>
+
+    <main class="catalog-grid">
+
+        <a href="A50476.html" class="catalog-card">
+            <div class="card-viewer-container">
+                <model-viewer 
+                    src="A50476-web-glb.glb" 
+                    auto-rotate 
+                    rotation-per-second="30deg"
+                    interaction-prompt="none">
+                </model-viewer>
+            </div>
+            <div class="card-info">
+                <span class="card-tag">Doba římská</span>
+                <h2>BBronzová ataše</h2>
+                <p class="card-meta">Lokalita: Boskovicko<br>Inv. č.: P8550</p>
+            </div>
+        </a>
+
+        <a href="A5.html" class="catalog-card">
+            <div class="card-viewer-container">
+                <model-viewer 
+                    src="https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb" 
+                    auto-rotate 
+                    rotation-per-second="30deg"
+                    interaction-prompt="none">
+                </model-viewer>
+            </div>
+            <div class="card-info">
+                <span class="card-tag">Doba římská</span>
+                <h2>Stříbrná spona s vysokým zachycovačem</h2>
+                <p class="card-meta">Lokalita: Hodonínsko<br>Inv. č.: G1985</p>
+            </div>
+        </a>
+
+        <a href="predmet-ozdoba.html" class="catalog-card">
+            <div class="card-viewer-container">
+                <model-viewer 
+                    src="https://modelviewer.dev/shared-assets/models/MaterialsVariants.glb" 
+                    auto-rotate 
+                    rotation-per-second="30deg"
+                    interaction-prompt="none">
+                </model-viewer>
+            </div>
+            <div class="card-info">
+                <span class="card-tag">Doba stěhování národů</span>
+                <h2>Zlatá plechová terčovitá ozdoba</h2>
+                <p class="card-meta">Lokalita: Veselsko<br>Inv. č.: A7733</p>
+            </div>
+        </a>
+
+    </main>
+
+</body>
+</html>
