@@ -53,9 +53,63 @@
             font-size: 14px;
         }
 
+        .search-filter-section {
+            max-width: 1200px;
+            margin: 30px auto 0 auto;
+            padding: 0 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .search-wrapper {
+            width: 100%;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #333;
+        }
+
+        .filter-wrapper {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            background: #ffffff;
+            border: 1px solid #ccc;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .filter-btn:hover {
+            border-color: #333;
+        }
+
+        .filter-btn.active {
+            background: #333;
+            color: #fff;
+            border-color: #333;
+        }
+
         .catalog-grid {
             max-width: 1200px;
-            margin: 40px auto;
+            margin: 30px auto 40px auto;
             padding: 0 20px;
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -134,9 +188,23 @@
         </div>
     </header>
 
-    <main class="catalog-grid">
+    <section class="search-filter-section">
+        <div class="search-wrapper">
+            <input type="text" id="searchInput" class="search-input" placeholder="Vyhledat předmět (název, lokalita, inv. č., datace...)">
+        </div>
+        <div class="filter-wrapper">
+            <button class="filter-btn active" data-filter="all">Vše</button>
+            <button class="filter-btn" data-filter="archeologie">Archeologie</button>
+            <button class="filter-btn" data-filter="historie">Historie</button>
+            <button class="filter-btn" data-filter="etnografie">Etnografie a regionália</button>
+            <button class="filter-btn" data-filter="prirodoveda">Přírodověda</button>
+            <button class="filter-btn" data-filter="militaria">Militária</button>
+        </div>
+    </section>
 
-        <a href="A50476.html" class="catalog-card">
+    <main class="catalog-grid" id="catalogGrid">
+
+        <a href="A50476.html" class="catalog-card" data-category="archeologie" data-name="Bronzová ataše" data-tag="Doba římská" data-meta="Lokalita: Boskovicko Inv. č.: A50476">
             <div class="card-viewer-container">
                 <model-viewer 
                     src="A50476-web-glb.glb" 
@@ -154,7 +222,7 @@
             </div>
         </a>
 
-        <a href="A56265.html" class="catalog-card">
+        <a href="A56265.html" class="catalog-card" data-category="archeologie" data-name="Stříbrná spona" data-tag="Doba římská" data-meta="Lokalita: Boskovicko Inv. č.: A56265">
             <div class="card-viewer-container">
                 <model-viewer 
                     src="A56265.glb" 
@@ -173,6 +241,51 @@
         </a>
 
     </main>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const cards = document.querySelectorAll('.catalog-card');
+
+        let currentFilter = 'all';
+        let searchText = '';
+
+        function filterCatalog() {
+            cards.forEach(card => {
+                const category = card.getAttribute('data-category');
+                const name = card.getAttribute('data-name').toLowerCase();
+                const tag = card.getAttribute('data-tag').toLowerCase();
+                const meta = card.getAttribute('data-meta').toLowerCase();
+                
+                const matchesFilter = (currentFilter === 'all' || category === currentFilter);
+                const matchesSearch = (
+                    name.includes(searchText) || 
+                    tag.includes(searchText) || 
+                    meta.includes(searchText)
+                );
+
+                if (matchesFilter && matchesSearch) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        searchInput.addEventListener('input', (e) => {
+            searchText = e.target.value.toLowerCase().trim();
+            filterCatalog();
+        });
+
+        filterButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                button.classList.add('active');
+                currentFilter = button.getAttribute('data-filter');
+                filterCatalog();
+            });
+        });
+    </script>
 
 </body>
 </html>
